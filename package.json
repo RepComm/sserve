@@ -1,11 +1,15 @@
 {
-  "name": "ts-map-babel-template",
+  "name": "@repcomm/sserve",
   "version": "1.0.0",
-  "description": "TypeScript, ES Modules, import map, import map polyfill, and babel",
-  "main": "index.js",
+  "description": "serve, but with SSL and file streams",
+  "main": "./index.js",
+  "type": "module",
+  "bin": {
+    "sserve": "./index.js"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RepComm/ts-map-babel-template.git"
+    "url": "git+https://github.com/RepComm/sserve.git"
   },
   "keywords": [
     "typescript",
@@ -16,22 +20,21 @@
   "author": "Jonathan Crowder",
   "license": "Unlicense",
   "bugs": {
-    "url": "https://github.com/RepComm/ts-map-babel-template/issues"
+    "url": "https://github.com/RepComm/sserve/issues"
   },
-  "homepage": "https://github.com/RepComm/ts-map-babel-template#readme",
+  "homepage": "https://github.com/RepComm/sserve#readme",
   "devDependencies": {
     "@babel/cli": "^7.13.16",
     "@babel/core": "^7.14.0",
     "@babel/plugin-transform-typescript": "^7.10.5",
     "@babel/preset-env": "^7.14.1",
+    "@types/node": "^18.11.18",
     "typescript": "^4.7.4"
   },
   "scripts": {
     "build": "babel src --extensions .ts --copy-files -d .",
     "build-types": "npx tsc --project tsconfig.json",
-    "publish": "npm publish --access public"
-  },
-  "dependencies": {
-    "@roguecircuitry/htmless": "https://github.com/RogueCircuitry/htmless"
+    "publish": "npm publish --access public",
+    "linux-perm-fix": "sudo rm /usr/local/bin/sserve & sudo npm link"
   }
 }
