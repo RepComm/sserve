@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { createServer as createServerSSL } from "https";
 import { readFile, statSync, createReadStream, existsSync, readdirSync } from "fs";
 import { join as pathJoin, dirname } from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, parse as urlParse } from "url";
 import { exponent, SSRBuilder } from "./htmless/ssr.js";
 import { escape } from "querystring";
 import { cwd } from "process";
@@ -34,9 +34,17 @@ async function readFileAsync(fname) {
     });
   });
 }
+async function readJsonAsync(fname) {
+  let buffer = await readFileAsync(fname);
+  let text = buffer.toString();
+  let json = JSON.parse(text);
+  return json;
+}
 async function main(args) {
   let dict = argsToDict(args);
   console.log(dict);
+  let knownMimeTypesFile = pathJoin(__dirname, "builtin.content_type.json");
+  let knownMimeTypes = await readJsonAsync(knownMimeTypesFile);
   let useSSL = dict["-ssl"] && dict["-ssl"] !== "false";
   let cert;
   let key;
@@ -49,12 +57,12 @@ async function main(args) {
   }
   let ssr = new SSRBuilder();
   let handler = (req, res) => {
-    let filePath = pathJoin(cwd(), req.url);
+    let url = urlParse(req.url);
+    let pathname = decodeURIComponent(url.pathname);
+    let filePath = pathJoin(cwd(), pathname);
+    console.log(filePath);
     if (!existsSync(filePath)) {
-      res.writeHead(404, {
-        // 'Content-Type': 'zip',
-        // 'Content-Length': stat.size
-      });
+      res.writeHead(404, {});
       res.end();
       return;
     }
@@ -139,9 +147,17 @@ async function main(args) {
       let body = ssr.create("body").mount(html).e;
       let menu = ssr.create("div", "menu").mount(body).e;
       let menuNavUp = ssr.create("span", "menu-nav-up", "menu-item").textContent("..").attrs({
-        "onclick": "fnav(this)"
+        "onclick": "navup()"
+      }).mount(menu);
+      let menuDirZip = ssr.create("span", "menu-dir-zip", "menu-item").textContent("Download Folder Zip").attrs({
+        "onclick": "fnav({textContent: '?zip'})"
       }).mount(menu);
       let code = ssr.create("script", "code").textContent(`
+        function navup () {
+          let href = window.location.href;
+          let index = href.lastIndexOf("/");
+          window.location.href = window.location.href.substring(0, index);
+        }
         function fnav(e) {
           if (e.textContent) {
             if (!window.location.href.endsWith("/")) {
@@ -168,11 +184,20 @@ async function main(args) {
       return;
     } else if (stat.isFile()) {
       let readStream = createReadStream(filePath);
-      res.writeHead(200, {
-        "Content-Length": stat.size
-      });
+      let ContentType = "application/octet-stream"; //default
 
-      // We replaced all the event handlers with a simple call to readStream.pipe()
+      let endingIndex = filePath.lastIndexOf(".");
+      if (endingIndex > -1) {
+        let ending = filePath.substring(endingIndex + 1);
+        let mimeType = knownMimeTypes[ending];
+        if (mimeType !== undefined) {
+          ContentType = mimeType;
+        }
+      }
+      res.writeHead(200, {
+        "Content-Length": stat.size,
+        "Content-Type": ContentType
+      });
       readStream.pipe(res);
     } else {
       res.writeHead(400, "Not a file or directory, aborting");

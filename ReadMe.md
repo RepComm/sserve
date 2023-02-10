@@ -18,13 +18,12 @@ Navigate to directory wished to be served, then run:
 `$ sserve`
 
 ## implemented
-- directory navigation
+- directory navigation (including spaces in file names)
 - file streaming (doesn't choke on large files)
 - basic interface
 - half baked server side renderer w/ similar API to @roguecircuitry/htmless
 
 ## not implemented / planned mvp
-- file name whitespace support (needs convert to URL friendly and back)
 - proper sanitisation (god knows what people will name their files)
 - SSL is not tested yet
 - auto-gen self signed SSL keys w/ openssh

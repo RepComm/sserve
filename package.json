@@ -36,5 +36,8 @@
     "build-types": "npx tsc --project tsconfig.json",
     "publish": "npm publish --access public",
     "linux-perm-fix": "sudo rm /usr/local/bin/sserve & sudo npm link"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
   }
 }
